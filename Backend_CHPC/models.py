@@ -18,6 +18,10 @@ class Usuario(db.Model):
     fecha_registro = db.Column(db.DateTime, default=datetime.utcnow)
     fecha_modificacion = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
+    # Relaciones
+    reseñas_usuario = db.relationship('Reseña', backref='cliente', cascade='all, delete-orphan', lazy=True)
+    carrito_usuario = db.relationship('Carrito', backref='cliente', cascade='all, delete-orphan', lazy=True)
+
     def set_password(self, contraseña):
         self.contraseña = bcrypt.generate_password_hash(contraseña).decode('utf-8')
 
@@ -28,7 +32,6 @@ class Usuario(db.Model):
         return self.rol == 'administrador'
 
 
-
 class Categoria(db.Model):
     __tablename__ = 'categorias'
     id = db.Column(db.Integer, primary_key=True)
@@ -36,8 +39,10 @@ class Categoria(db.Model):
     descripcion = db.Column(db.Text)
     id_categoria_padre = db.Column(db.Integer, db.ForeignKey('categorias.id'), nullable=True)
 
+    # Relaciones
     subcategorias = db.relationship('Categoria', backref=db.backref('categoria_padre', remote_side=[id]), lazy=True)
     productos_categoria = db.relationship('Producto', backref='categoria', cascade='all, delete-orphan', lazy=True)
+
 
 class Marca(db.Model):
     __tablename__ = 'marcas'
@@ -46,7 +51,9 @@ class Marca(db.Model):
     descripcion = db.Column(db.Text)
     sitio_web = db.Column(db.String(255))
 
+    # Relaciones
     productos_marca = db.relationship('Producto', backref='marca', cascade='all, delete-orphan', lazy=True)
+
 
 class Producto(db.Model):
     __tablename__ = 'productos'
@@ -61,9 +68,11 @@ class Producto(db.Model):
     id_categoria = db.Column(db.Integer, db.ForeignKey('categorias.id'), nullable=False)
     id_marca = db.Column(db.Integer, db.ForeignKey('marcas.id'), nullable=False)
 
+    # Relaciones
     media_producto = db.relationship('Media', backref='producto', cascade='all, delete-orphan', lazy=True)
     reseñas_producto = db.relationship('Reseña', backref='producto', cascade='all, delete-orphan', lazy=True)
     carrito_producto = db.relationship('Carrito', backref='producto', cascade='all, delete-orphan', lazy=True)
+
 
 class Media(db.Model):
     __tablename__ = 'media'
@@ -74,6 +83,7 @@ class Media(db.Model):
     descripcion = db.Column(db.Text)
     orden = db.Column(db.Integer, default=0)
 
+
 class Reseña(db.Model):
     __tablename__ = 'reseñas'
     id = db.Column(db.Integer, primary_key=True)
@@ -83,6 +93,7 @@ class Reseña(db.Model):
     texto_resena = db.Column(db.Text)
     fecha_resena = db.Column(db.DateTime, default=datetime.utcnow)
 
+
 class Carrito(db.Model):
     __tablename__ = 'carrito'
     id = db.Column(db.Integer, primary_key=True)
@@ -90,6 +101,7 @@ class Carrito(db.Model):
     id_producto = db.Column(db.Integer, db.ForeignKey('productos.id'), nullable=False)
     cantidad = db.Column(db.Integer, nullable=False)
     fecha_agregado = db.Column(db.DateTime, default=datetime.utcnow)
+
 
 class Banner(db.Model):
     __tablename__ = 'banners'

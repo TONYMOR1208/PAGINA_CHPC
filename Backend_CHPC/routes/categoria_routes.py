@@ -15,21 +15,24 @@ def create_response(data=None, message="", status="success", code=200):
     return jsonify(response), code
 
 
-@categoria_bp.route('/categorias', methods=['GET'])
+# Obtener todas las categorías
+@categoria_bp.route('/', methods=['GET'])
 def obtener_categorias():
     categorias = Categoria.query.all()
     categoria_schema = CategoriaSchema(many=True)
     return create_response(data=categoria_schema.dump(categorias), message="Lista de categorías obtenida")
 
 
-@categoria_bp.route('/categorias/<int:id>', methods=['GET'])
+# Obtener una categoría específica por ID
+@categoria_bp.route('/<int:id>', methods=['GET'])
 def obtener_categoria(id):
     categoria = Categoria.query.get_or_404(id)
     categoria_schema = CategoriaSchema()
     return create_response(data=categoria_schema.dump(categoria), message="Categoría obtenida")
 
 
-@categoria_bp.route('/categorias', methods=['POST'])
+# Crear una nueva categoría
+@categoria_bp.route('/', methods=['POST'])
 def crear_categoria():
     data = request.get_json()
     categoria_schema = CategoriaSchema()
@@ -52,7 +55,8 @@ def crear_categoria():
     return create_response(data=categoria_schema.dump(nueva_categoria), message="Categoría creada", code=201)
 
 
-@categoria_bp.route('/categorias/<int:id>', methods=['PUT'])
+# Actualizar una categoría existente
+@categoria_bp.route('/<int:id>', methods=['PUT'])
 def actualizar_categoria(id):
     categoria = Categoria.query.get_or_404(id)
     data = request.get_json()
@@ -74,7 +78,8 @@ def actualizar_categoria(id):
     return create_response(data=categoria_schema.dump(categoria), message="Categoría actualizada")
 
 
-@categoria_bp.route('/categorias/<int:id>', methods=['DELETE'])
+# Eliminar una categoría
+@categoria_bp.route('/<int:id>', methods=['DELETE'])
 def eliminar_categoria(id):
     categoria = Categoria.query.get_or_404(id)
 

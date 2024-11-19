@@ -16,7 +16,7 @@ def create_response(data=None, message="", status="success", code=200):
 
 
 # Obtener todas las marcas
-@marca_bp.route('/marcas', methods=['GET'])
+@marca_bp.route('/', methods=['GET'])
 def obtener_marcas():
     marcas = Marca.query.all()
     marca_schema = MarcaSchema(many=True)
@@ -24,7 +24,7 @@ def obtener_marcas():
 
 
 # Obtener una marca específica por ID
-@marca_bp.route('/marcas/<int:id>', methods=['GET'])
+@marca_bp.route('/<int:id>', methods=['GET'])
 def obtener_marca(id):
     marca = Marca.query.get_or_404(id)
     marca_schema = MarcaSchema()
@@ -32,7 +32,7 @@ def obtener_marca(id):
 
 
 # Crear una nueva marca
-@marca_bp.route('/marcas', methods=['POST'])
+@marca_bp.route('/', methods=['POST'])
 def crear_marca():
     data = request.get_json()
     marca_schema = MarcaSchema()
@@ -56,7 +56,7 @@ def crear_marca():
 
 
 # Actualizar una marca existente
-@marca_bp.route('/marcas/<int:id>', methods=['PUT'])
+@marca_bp.route('/<int:id>', methods=['PUT'])
 def actualizar_marca(id):
     marca = Marca.query.get_or_404(id)
     data = request.get_json()
@@ -79,7 +79,7 @@ def actualizar_marca(id):
 
 
 # Eliminar una marca
-@marca_bp.route('/marcas/<int:id>', methods=['DELETE'])
+@marca_bp.route('/<int:id>', methods=['DELETE'])
 def eliminar_marca(id):
     marca = Marca.query.get_or_404(id)
 

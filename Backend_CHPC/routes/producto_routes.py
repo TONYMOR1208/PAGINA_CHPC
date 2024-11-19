@@ -16,7 +16,7 @@ def create_response(data=None, message="", status="success", code=200):
 
 
 # Obtener todos los productos
-@producto_bp.route('/productos', methods=['GET'])
+@producto_bp.route('/', methods=['GET'])
 def obtener_productos():
     productos = Producto.query.all()
     producto_schema = ProductoSchema(many=True)
@@ -24,7 +24,7 @@ def obtener_productos():
 
 
 # Obtener un producto específico por ID
-@producto_bp.route('/productos/<int:id>', methods=['GET'])
+@producto_bp.route('/<int:id>', methods=['GET'])
 def obtener_producto(id):
     producto = Producto.query.get_or_404(id)
     producto_schema = ProductoSchema()
@@ -32,7 +32,7 @@ def obtener_producto(id):
 
 
 # Crear un nuevo producto
-@producto_bp.route('/productos', methods=['POST'])
+@producto_bp.route('/', methods=['POST'])
 def crear_producto():
     data = request.get_json()
     producto_schema = ProductoSchema()
@@ -62,7 +62,7 @@ def crear_producto():
 
 
 # Actualizar un producto existente
-@producto_bp.route('/productos/<int:id>', methods=['PUT'])
+@producto_bp.route('/<int:id>', methods=['PUT'])
 def actualizar_producto(id):
     producto = Producto.query.get_or_404(id)
     data = request.get_json()
@@ -91,7 +91,7 @@ def actualizar_producto(id):
 
 
 # Eliminar un producto
-@producto_bp.route('/productos/<int:id>', methods=['DELETE'])
+@producto_bp.route('/<int:id>', methods=['DELETE'])
 def eliminar_producto(id):
     producto = Producto.query.get_or_404(id)
 

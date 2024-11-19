@@ -16,7 +16,7 @@ def create_response(data=None, message="", status="success", code=200):
 
 
 # Obtener todos los medios
-@media_bp.route('/media', methods=['GET'])
+@media_bp.route('/', methods=['GET'])
 def obtener_media():
     medios = Media.query.all()
     media_schema = MediaSchema(many=True)
@@ -24,7 +24,7 @@ def obtener_media():
 
 
 # Obtener un medio específico por ID
-@media_bp.route('/media/<int:id>', methods=['GET'])
+@media_bp.route('/<int:id>', methods=['GET'])
 def obtener_un_medio(id):
     medio = Media.query.get_or_404(id)
     media_schema = MediaSchema()
@@ -32,7 +32,7 @@ def obtener_un_medio(id):
 
 
 # Crear un nuevo medio
-@media_bp.route('/media', methods=['POST'])
+@media_bp.route('/', methods=['POST'])
 def crear_medio():
     data = request.get_json()
     media_schema = MediaSchema()
@@ -58,7 +58,7 @@ def crear_medio():
 
 
 # Actualizar un medio existente
-@media_bp.route('/media/<int:id>', methods=['PUT'])
+@media_bp.route('/<int:id>', methods=['PUT'])
 def actualizar_medio(id):
     medio = Media.query.get_or_404(id)
     data = request.get_json()
@@ -83,7 +83,7 @@ def actualizar_medio(id):
 
 
 # Eliminar un medio
-@media_bp.route('/media/<int:id>', methods=['DELETE'])
+@media_bp.route('/<int:id>', methods=['DELETE'])
 def eliminar_medio(id):
     medio = Media.query.get_or_404(id)
     db.session.delete(medio)

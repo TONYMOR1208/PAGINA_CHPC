@@ -16,7 +16,7 @@ def create_response(data=None, message="", status="success", code=200):
 
 
 # Obtener todas las reseñas
-@resena_bp.route('/resenas', methods=['GET'])
+@resena_bp.route('/', methods=['GET'])
 def obtener_resenas():
     resenas = Reseña.query.all()
     resena_schema = ResenaSchema(many=True)
@@ -24,7 +24,7 @@ def obtener_resenas():
 
 
 # Obtener una reseña específica por ID
-@resena_bp.route('/resenas/<int:id>', methods=['GET'])
+@resena_bp.route('/<int:id>', methods=['GET'])
 def obtener_resena(id):
     resena = Reseña.query.get_or_404(id)
     resena_schema = ResenaSchema()
@@ -32,7 +32,7 @@ def obtener_resena(id):
 
 
 # Crear una nueva reseña
-@resena_bp.route('/resenas', methods=['POST'])
+@resena_bp.route('/', methods=['POST'])
 def crear_resena():
     data = request.get_json()
     resena_schema = ResenaSchema()
@@ -57,7 +57,7 @@ def crear_resena():
 
 
 # Actualizar una reseña existente
-@resena_bp.route('/resenas/<int:id>', methods=['PUT'])
+@resena_bp.route('/<int:id>', methods=['PUT'])
 def actualizar_resena(id):
     resena = Reseña.query.get_or_404(id)
     data = request.get_json()
@@ -81,7 +81,7 @@ def actualizar_resena(id):
 
 
 # Eliminar una reseña
-@resena_bp.route('/resenas/<int:id>', methods=['DELETE'])
+@resena_bp.route('/<int:id>', methods=['DELETE'])
 def eliminar_resena(id):
     resena = Reseña.query.get_or_404(id)
     db.session.delete(resena)

@@ -16,7 +16,7 @@ def create_response(data=None, message="", status="success", code=200):
 
 
 # Obtener todos los ítems del carrito
-@carrito_bp.route('/carrito', methods=['GET'])
+@carrito_bp.route('/', methods=['GET'])
 def obtener_carrito():
     items = Carrito.query.all()
     carrito_schema = CarritoSchema(many=True)
@@ -24,7 +24,7 @@ def obtener_carrito():
 
 
 # Obtener un ítem del carrito por ID
-@carrito_bp.route('/carrito/<int:id>', methods=['GET'])
+@carrito_bp.route('/<int:id>', methods=['GET'])
 def obtener_item_carrito(id):
     item = Carrito.query.get_or_404(id)
     carrito_schema = CarritoSchema()
@@ -32,7 +32,7 @@ def obtener_item_carrito(id):
 
 
 # Agregar un nuevo ítem al carrito
-@carrito_bp.route('/carrito', methods=['POST'])
+@carrito_bp.route('/', methods=['POST'])
 def agregar_al_carrito():
     data = request.get_json()
     carrito_schema = CarritoSchema()
@@ -56,7 +56,7 @@ def agregar_al_carrito():
 
 
 # Actualizar la cantidad de un ítem del carrito
-@carrito_bp.route('/carrito/<int:id>', methods=['PUT'])
+@carrito_bp.route('/<int:id>', methods=['PUT'])
 def actualizar_item_carrito(id):
     item = Carrito.query.get_or_404(id)
     data = request.get_json()
@@ -77,7 +77,7 @@ def actualizar_item_carrito(id):
 
 
 # Eliminar un ítem del carrito
-@carrito_bp.route('/carrito/<int:id>', methods=['DELETE'])
+@carrito_bp.route('/<int:id>', methods=['DELETE'])
 def eliminar_item_carrito(id):
     item = Carrito.query.get_or_404(id)
     db.session.delete(item)

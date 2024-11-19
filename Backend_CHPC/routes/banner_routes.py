@@ -17,7 +17,7 @@ def create_response(data=None, message="", status="success", code=200):
 
 
 # Obtener todos los banners
-@banner_bp.route('/banners', methods=['GET'])
+@banner_bp.route('/', methods=['GET'])
 def obtener_banners():
     banners = Banner.query.all()
     banner_schema = BannerSchema(many=True)
@@ -25,7 +25,7 @@ def obtener_banners():
 
 
 # Obtener un banner específico por ID
-@banner_bp.route('/banners/<int:id>', methods=['GET'])
+@banner_bp.route('/<int:id>', methods=['GET'])
 def obtener_banner(id):
     banner = Banner.query.get_or_404(id)
     banner_schema = BannerSchema()
@@ -33,7 +33,7 @@ def obtener_banner(id):
 
 
 # Crear un nuevo banner
-@banner_bp.route('/banners', methods=['POST'])
+@banner_bp.route('/', methods=['POST'])
 def crear_banner():
     data = request.get_json()
     banner_schema = BannerSchema()
@@ -61,7 +61,7 @@ def crear_banner():
 
 
 # Actualizar un banner existente
-@banner_bp.route('/banners/<int:id>', methods=['PUT'])
+@banner_bp.route('/<int:id>', methods=['PUT'])
 def actualizar_banner(id):
     banner = Banner.query.get_or_404(id)
     data = request.get_json()
@@ -88,7 +88,7 @@ def actualizar_banner(id):
 
 
 # Eliminar un banner
-@banner_bp.route('/banners/<int:id>', methods=['DELETE'])
+@banner_bp.route('/<int:id>', methods=['DELETE'])
 def eliminar_banner(id):
     banner = Banner.query.get_or_404(id)
     db.session.delete(banner)
