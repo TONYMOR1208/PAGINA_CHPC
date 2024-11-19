@@ -9,7 +9,7 @@ def validar_contraseña(contraseña):
         )
 
 # Esquema de validación para usuarios
-class UsuarioSchema(Schema):
+class UsuarioSchema(Schema):    
     nombre_usuario = fields.Str(
         required=True,
         validate=validate.Length(min=3, max=80, error="El nombre de usuario debe tener entre 3 y 80 caracteres.")
