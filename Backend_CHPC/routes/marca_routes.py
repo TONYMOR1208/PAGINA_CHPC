@@ -8,6 +8,16 @@ bp = Blueprint('marca_routes', __name__, url_prefix='/marcas')
 marca_schema = MarcaSchema()
 marcas_schema = MarcaSchema(many=True)
 
+@bp.route('/', methods=['GET'])
+def obtener_marcas():
+    marcas = Marca.query.all()
+    return jsonify(marcas_schema.dump(marcas)), 200
+
+@bp.route('/<int:id>', methods=['GET'])
+def obtener_marca(id):
+    marca = Marca.query.get_or_404(id)
+    return jsonify(marca_schema.dump(marca)), 200
+
 @bp.route('/', methods=['POST'])
 def crear_marca():
     data = request.json
@@ -22,17 +32,7 @@ def crear_marca():
     )
     db.session.add(nueva_marca)
     db.session.commit()
-    return marca_schema.jsonify(nueva_marca), 201
-
-@bp.route('/', methods=['GET'])
-def obtener_marcas():
-    marcas = Marca.query.all()
-    return marcas_schema.jsonify(marcas), 200
-
-@bp.route('/<int:id>', methods=['GET'])
-def obtener_marca(id):
-    marca = Marca.query.get_or_404(id)
-    return marca_schema.jsonify(marca), 200
+    return jsonify(marca_schema.dump(nueva_marca)), 201
 
 @bp.route('/<int:id>', methods=['PUT'])
 def actualizar_marca(id):
@@ -46,7 +46,7 @@ def actualizar_marca(id):
     marca.descripcion = data.get('descripcion', marca.descripcion)
     marca.sitio_web = data.get('sitio_web', marca.sitio_web)
     db.session.commit()
-    return marca_schema.jsonify(marca), 200
+    return jsonify(marca_schema.dump(marca)), 200
 
 @bp.route('/<int:id>', methods=['DELETE'])
 def eliminar_marca(id):

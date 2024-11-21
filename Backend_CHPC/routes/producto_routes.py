@@ -8,6 +8,16 @@ bp = Blueprint('producto_routes', __name__, url_prefix='/productos')
 producto_schema = ProductoSchema()
 productos_schema = ProductoSchema(many=True)
 
+@bp.route('/', methods=['GET'])
+def obtener_productos():
+    productos = Producto.query.all()
+    return jsonify(productos_schema.dump(productos)), 200
+
+@bp.route('/<int:id>', methods=['GET'])
+def obtener_producto(id):
+    producto = Producto.query.get_or_404(id)
+    return jsonify(producto_schema.dump(producto)), 200
+
 @bp.route('/', methods=['POST'])
 def crear_producto():
     data = request.json
@@ -28,17 +38,7 @@ def crear_producto():
     )
     db.session.add(nuevo_producto)
     db.session.commit()
-    return producto_schema.jsonify(nuevo_producto), 201
-
-@bp.route('/', methods=['GET'])
-def obtener_productos():
-    productos = Producto.query.all()
-    return productos_schema.jsonify(productos), 200
-
-@bp.route('/<int:id>', methods=['GET'])
-def obtener_producto(id):
-    producto = Producto.query.get_or_404(id)
-    return producto_schema.jsonify(producto), 200
+    return jsonify(producto_schema.dump(nuevo_producto)), 201
 
 @bp.route('/<int:id>', methods=['PUT'])
 def actualizar_producto(id):
@@ -58,7 +58,7 @@ def actualizar_producto(id):
     producto.id_categoria = data.get('id_categoria', producto.id_categoria)
     producto.id_marca = data.get('id_marca', producto.id_marca)
     db.session.commit()
-    return producto_schema.jsonify(producto), 200
+    return jsonify(producto_schema.dump(producto)), 200
 
 @bp.route('/<int:id>', methods=['DELETE'])
 def eliminar_producto(id):
