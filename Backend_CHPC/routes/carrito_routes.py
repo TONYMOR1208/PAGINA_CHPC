@@ -1,85 +1,56 @@
-from flask import Blueprint, jsonify, request
-from models import db, Carrito
+from flask import Blueprint, request, jsonify
+from models import Carrito
 from schemas.carrito_schema import CarritoSchema
-from sqlalchemy.exc import IntegrityError
+from app import db
 
-carrito_bp = Blueprint('carrito', __name__)
+bp = Blueprint('carrito_routes', __name__, url_prefix='/carrito')
 
-# Helper para respuestas estándar
-def create_response(data=None, message="", status="success", code=200):
-    response = {
-        "status": status,
-        "message": message,
-        "data": data
-    }
-    return jsonify(response), code
+carrito_schema = CarritoSchema()
+carritos_schema = CarritoSchema(many=True)
 
-
-# Obtener todos los ítems del carrito
-@carrito_bp.route('/', methods=['GET'])
-def obtener_carrito():
-    items = Carrito.query.all()
-    carrito_schema = CarritoSchema(many=True)
-    return create_response(data=carrito_schema.dump(items), message="Lista de ítems del carrito obtenida")
-
-
-# Obtener un ítem del carrito por ID
-@carrito_bp.route('/<int:id>', methods=['GET'])
-def obtener_item_carrito(id):
-    item = Carrito.query.get_or_404(id)
-    carrito_schema = CarritoSchema()
-    return create_response(data=carrito_schema.dump(item), message="Ítem del carrito obtenido")
-
-
-# Agregar un nuevo ítem al carrito
-@carrito_bp.route('/', methods=['POST'])
-def agregar_al_carrito():
-    data = request.get_json()
-    carrito_schema = CarritoSchema()
+@bp.route('/', methods=['POST'])
+def agregar_carrito():
+    data = request.json
     errors = carrito_schema.validate(data)
     if errors:
-        return create_response(data=errors, message="Errores de validación", status="error", code=400)
+        return jsonify(errors), 400
 
-    nuevo_item = Carrito(
+    nuevo_carrito = Carrito(
         id_cliente=data['id_cliente'],
         id_producto=data['id_producto'],
         cantidad=data['cantidad']
     )
-    try:
-        db.session.add(nuevo_item)
-        db.session.commit()
-    except IntegrityError:
-        db.session.rollback()
-        return create_response(message="Error de integridad al agregar el ítem. Verifica las claves foráneas.", status="error", code=400)
+    db.session.add(nuevo_carrito)
+    db.session.commit()
+    return carrito_schema.jsonify(nuevo_carrito), 201
 
-    return create_response(data=carrito_schema.dump(nuevo_item), message="Ítem agregado al carrito", code=201)
+@bp.route('/', methods=['GET'])
+def obtener_carrito():
+    carrito = Carrito.query.all()
+    return carritos_schema.jsonify(carrito), 200
 
+@bp.route('/<int:id>', methods=['GET'])
+def obtener_item_carrito(id):
+    item = Carrito.query.get_or_404(id)
+    return carrito_schema.jsonify(item), 200
 
-# Actualizar la cantidad de un ítem del carrito
-@carrito_bp.route('/<int:id>', methods=['PUT'])
+@bp.route('/<int:id>', methods=['PUT'])
 def actualizar_item_carrito(id):
     item = Carrito.query.get_or_404(id)
-    data = request.get_json()
-    carrito_schema = CarritoSchema()
+    data = request.json
     errors = carrito_schema.validate(data)
     if errors:
-        return create_response(data=errors, message="Errores de validación", status="error", code=400)
+        return jsonify(errors), 400
 
+    item.id_cliente = data.get('id_cliente', item.id_cliente)
+    item.id_producto = data.get('id_producto', item.id_producto)
     item.cantidad = data.get('cantidad', item.cantidad)
+    db.session.commit()
+    return carrito_schema.jsonify(item), 200
 
-    try:
-        db.session.commit()
-    except IntegrityError:
-        db.session.rollback()
-        return create_response(message="Error de integridad al actualizar el ítem del carrito.", status="error", code=400)
-
-    return create_response(data=carrito_schema.dump(item), message="Ítem del carrito actualizado")
-
-
-# Eliminar un ítem del carrito
-@carrito_bp.route('/<int:id>', methods=['DELETE'])
+@bp.route('/<int:id>', methods=['DELETE'])
 def eliminar_item_carrito(id):
     item = Carrito.query.get_or_404(id)
     db.session.delete(item)
     db.session.commit()
-    return create_response(message="Ítem del carrito eliminado", code=204)
+    return jsonify({"mensaje": "Item eliminado del carrito exitosamente"}), 200

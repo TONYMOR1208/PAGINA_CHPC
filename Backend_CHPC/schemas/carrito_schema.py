@@ -1,13 +1,18 @@
-from marshmallow import Schema, fields
-from datetime import datetime
+from marshmallow import Schema, fields, validate
 
 class CarritoSchema(Schema):
-    id = fields.Int(dump_only=True)
-    id_cliente = fields.Int(required=True)
-    id_producto = fields.Int(required=True)
+    id_cliente = fields.Int(
+        required=True,
+        error_messages={"required": "El cliente es obligatorio."}
+    )
+    id_producto = fields.Int(
+        required=True,
+        error_messages={"required": "El producto es obligatorio."}
+    )
     cantidad = fields.Int(
         required=True,
-        validate=lambda x: x > 0,
-        error_messages={"validator_failed": "La cantidad debe ser mayor que 0."}
+        validate=validate.Range(min=1, error="La cantidad debe ser al menos 1.")
     )
-    fecha_agregado = fields.DateTime(dump_only=True, default=datetime.utcnow)
+    fecha_agregado = fields.DateTime(
+        dump_only=True
+    )

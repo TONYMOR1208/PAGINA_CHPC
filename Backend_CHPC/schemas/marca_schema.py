@@ -1,8 +1,14 @@
-from marshmallow import Schema, fields
+from marshmallow import Schema, fields, validate
 
 class MarcaSchema(Schema):
-    id = fields.Int(dump_only=True)
-    nombre_marca = fields.Str(required=True)
-    descripcion = fields.Str(allow_none=True)
-    sitio_web = fields.Str(allow_none=True)
-    productos_marca = fields.Nested('ProductoSchema', many=True, exclude=('marca',), allow_none=True)
+    nombre_marca = fields.Str(
+        required=True,
+        validate=validate.Length(min=3, max=80, error="El nombre de la marca debe tener entre 3 y 80 caracteres.")
+    )
+    descripcion = fields.Str(
+        validate=validate.Length(max=255, error="La descripción debe tener como máximo 255 caracteres.")
+    )
+    sitio_web = fields.Url(
+        allow_none=True,
+        error_messages={"invalid": "Debe ser una URL válida."}
+    )
