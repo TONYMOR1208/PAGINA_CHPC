@@ -1,7 +1,8 @@
-from marshmallow import Schema, fields, validate, validates_schema, ValidationError
+from marshmallow import Schema, fields, validate, ValidationError
+
 
 class BannerSchema(Schema):
-    id = fields.Int(dump_only=True)  # Solo para lectura (clave primaria)
+    id = fields.Int(dump_only=True)  # Solo para lectura
 
     titulo = fields.Str(
         required=True,
@@ -14,17 +15,6 @@ class BannerSchema(Schema):
             "invalid": "Debe ser una URL válida."
         }
     )
-    texto_adicional = fields.Str(
-        validate=validate.Length(max=500, error="El texto adicional debe tener como máximo 500 caracteres.")
-    )
-    fecha_inicio = fields.Date(
-        required=True,
-        error_messages={"required": "La fecha de inicio es obligatoria."}
-    )
-    fecha_fin = fields.Date(
-        required=True,
-        error_messages={"required": "La fecha de fin es obligatoria."}
-    )
     orden = fields.Int(
         validate=validate.Range(min=0, error="El orden debe ser mayor o igual a 0.")
     )
@@ -32,16 +22,5 @@ class BannerSchema(Schema):
         required=True,
         error_messages={"required": "El estado es obligatorio."}
     )
-
-    @validates_schema
-    def validate_fechas(self, data, **kwargs):
-        """
-        Validación personalizada para asegurarse de que `fecha_fin` sea posterior a `fecha_inicio`.
-        """
-        fecha_inicio = data.get("fecha_inicio")
-        fecha_fin = data.get("fecha_fin")
-        if fecha_inicio and fecha_fin and fecha_fin <= fecha_inicio:
-            raise ValidationError(
-                "La fecha de fin debe ser posterior a la fecha de inicio.",
-                field_name="fecha_fin"
-            )
+    fecha_creacion = fields.DateTime(dump_only=True)  # Solo lectura
+    fecha_modificacion = fields.DateTime(dump_only=True)  # Solo lectura

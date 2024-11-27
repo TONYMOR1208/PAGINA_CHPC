@@ -1,5 +1,5 @@
 <template>
-  <!-- Header con diseño original -->
+  <!-- Header -->
   <header class="header">
     <div class="logo">
       <img src="ruta-del-logo.png" alt="Logo de la Tienda" />
@@ -26,35 +26,45 @@
     </div>
   </header>
 
-  <!-- Contenido principal de la página -->
+  <!-- Contenido principal -->
   <div class="home-container">
-    <!-- Nueva sección de banners corredizos -->
+    <!-- Banners -->
     <div class="banner-slider">
-      <div v-for="(banner, index) in banners" :key="index" class="banner-slide">
-        <img :src="banner.imagen_url" alt="Banner" />
-      </div>
+      <template v-if="loadingBanners">
+        <p>Cargando banners...</p>
+      </template>
+      <template v-else>
+        <div v-for="(banner, index) in banners" :key="index" class="banner-slide">
+          <img :src="banner.imagen_url" alt="Banner" />
+        </div>
+      </template>
     </div>
 
     <h1>Bienvenidos a Nuestra Tienda</h1>
     <p>Explora nuestros productos y encuentra lo que necesitas.</p>
 
-    <div class="product-grid">
-      <div
-        v-for="producto in productos"
-        :key="producto.id"
-        class="product-card"
-      >
-        <img :src="producto.imagen_url" alt="Imagen del Producto" />
-        <h3>{{ producto.nombre }}</h3>
-        <p>{{ producto.descripcion }}</p>
-        <!-- Muestra el precio solo si el usuario está autenticado -->
-        <p v-if="isAuthenticated"><strong>Precio:</strong> ${{ producto.precio }}</p>
-        <!-- Muestra el botón de detalles si el usuario está autenticado -->
-        <button v-if="isAuthenticated" @click="verDetalle(producto.id)">Ver Detalles</button>
-        <!-- Muestra un botón para iniciar sesión si el usuario no está autenticado -->
-        <button v-else @click="redirigirLogin">Inicia Sesión para Ver Precios</button>
+    <!-- Productos -->
+    <template v-if="loadingProductos">
+      <p>Cargando productos...</p>
+    </template>
+    <template v-else>
+      <div class="product-grid">
+        <div
+          v-for="producto in productos"
+          :key="producto.id"
+          class="product-card"
+        >
+          <img :src="producto.imagen_url" alt="Imagen del Producto" />
+          <h3>{{ producto.nombre }}</h3>
+          <p>{{ producto.descripcion }}</p>
+          <!-- Mostrar precio solo si está autenticado -->
+          <p v-if="isAuthenticated"><strong>Precio:</strong> ${{ producto.precio }}</p>
+          <!-- Botón de acciones según autenticación -->
+          <button v-if="isAuthenticated" @click="verDetalle(producto.id)">Ver Detalles</button>
+          <button v-else @click="redirigirLogin">Inicia Sesión para Ver Precios</button>
+        </div>
       </div>
-    </div>
+    </template>
   </div>
 </template>
 
@@ -65,44 +75,64 @@ export default {
   name: 'HomePage',
   data() {
     return {
-      productos: [],
-      banners: [], // Nueva propiedad para los banners
-      searchQuery: '',
-      isAuthenticated: false,
+      productos: [], // Lista de productos
+      banners: [], // Lista de banners
+      searchQuery: '', // Texto del cuadro de búsqueda
+      isAuthenticated: false, // Estado de autenticación
+      loadingProductos: false, // Indicador de carga para productos
+      loadingBanners: false, // Indicador de carga para banners
     };
   },
   async created() {
-    // Comprobación de autenticación
+    // Comprobar si el usuario está autenticado
     this.isAuthenticated = !!localStorage.getItem('access_token');
 
-    // Cargar productos desde la API
-    try {
-      const response = await axios.get('http://localhost:5000/tienda/productos');
-      this.productos = response.data.data;
-    } catch (error) {
-      console.error("Error al cargar los productos:", error);
-    }
-
-    // Cargar banners desde la API
-    try {
-      const bannerResponse = await axios.get('http://localhost:5000/tienda/banners');
-      this.banners = bannerResponse.data.data; // Ajusta según el formato de los datos devueltos
-    } catch (error) {
-      console.error("Error al cargar los banners:", error);
-    }
+    // Cargar datos iniciales
+    this.cargarProductos();
+    this.cargarBanners();
   },
   methods: {
+    async cargarProductos() {
+      this.loadingProductos = true;
+      try {
+        const response = await axios.get('http://localhost:5000/tienda/productos');
+        if (response.data && response.data.data) {
+          this.productos = response.data.data;
+        } else {
+          console.error('Formato inesperado en la respuesta de productos:', response.data);
+        }
+      } catch (error) {
+        console.error('Error al cargar los productos:', error.message);
+      } finally {
+        this.loadingProductos = false;
+      }
+    },
+    async cargarBanners() {
+      this.loadingBanners = true;
+      try {
+        const response = await axios.get('http://localhost:5000/tienda/banners');
+        if (response.data && response.data.data) {
+          this.banners = response.data.data;
+        } else {
+          console.error('Formato inesperado en la respuesta de banners:', response.data);
+        }
+      } catch (error) {
+        console.error('Error al cargar los banners:', error.message);
+      } finally {
+        this.loadingBanners = false;
+      }
+    },
     verDetalle(id) {
       if (id) {
         this.$router.push({ name: 'ProductoDetalle', params: { id } });
       } else {
-        console.error("El ID del producto es indefinido.");
+        console.error('El ID del producto es indefinido.');
       }
     },
     buscarProductos() {
       if (this.isAuthenticated) {
-        console.log("Buscando productos con:", this.searchQuery);
-        // Agrega aquí la lógica de búsqueda
+        console.log('Buscando productos con:', this.searchQuery);
+        // Agrega aquí la lógica de búsqueda adicional
       }
     },
     cerrarSesion() {
@@ -118,7 +148,7 @@ export default {
 </script>
 
 <style scoped>
-/* Estilos del header original */
+/* Estilos del header */
 .header {
   display: flex;
   align-items: center;
@@ -156,7 +186,8 @@ export default {
   background-color: #ff8c00;
 }
 
-.user-actions a, .user-actions button {
+.user-actions a,
+.user-actions button {
   margin-left: 15px;
   color: #ff9900;
   text-decoration: none;
@@ -165,7 +196,8 @@ export default {
   cursor: pointer;
 }
 
-.user-actions a:hover, .user-actions button:hover {
+.user-actions a:hover,
+.user-actions button:hover {
   text-decoration: underline;
 }
 
@@ -237,5 +269,13 @@ export default {
 
 .product-card button:hover {
   background-color: #ff8c00;
+}
+
+/* Indicadores de carga */
+p {
+  font-size: 16px;
+  color: #555;
+  text-align: center;
+  margin-top: 20px;
 }
 </style>

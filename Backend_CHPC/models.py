@@ -103,14 +103,13 @@ class Carrito(db.Model):
     fecha_agregado = db.Column(db.DateTime, default=datetime.utcnow)
 
 
+
 class Banner(db.Model):
     __tablename__ = 'banners'
+
     id = db.Column(db.Integer, primary_key=True)
     titulo = db.Column(db.String(150), nullable=False)
     imagen_url = db.Column(db.String(255), nullable=False)
-    texto_adicional = db.Column(db.Text)
-    fecha_inicio = db.Column(db.Date)
-    fecha_fin = db.Column(db.Date)
     orden = db.Column(db.Integer, default=0)
     estado = db.Column(db.Boolean, default=True)
     fecha_creacion = db.Column(db.DateTime, default=datetime.utcnow)
