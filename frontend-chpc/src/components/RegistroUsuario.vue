@@ -1,7 +1,15 @@
 <template>
-    <br>
-    <br>
-    <br>
+
+    <header class="header">
+        <div class="logo">
+          <img src="ruta-del-logo.png" alt="Logo de la Tienda" />
+        </div>
+        <div class="navigation">
+          <!-- Botón para ir a la página principal con restricciones -->
+          <router-link to="/">Ir a la página principal</router-link>
+        </div>
+      </header>
+  
     <div class="register-container">
       <h2>Crear Una Cuenta</h2>
       <p><router-link to="/">Inicio</router-link> / Registro</p>
@@ -160,6 +168,29 @@
   
   
   <style scoped>
+  /* Estilos del header */
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 15px;
+    background-color: #232f3e;
+    color: white;
+  }
+  
+  .logo img {
+    width: 100px;
+  }
+  
+  .navigation a {
+    color: #ff9900;
+    text-decoration: none;
+    font-size: 16px;
+  }
+  
+  .navigation a:hover {
+    text-decoration: underline;
+  }
   /* Los estilos permanecen iguales */
   .register-container {
     max-width: 500px;
