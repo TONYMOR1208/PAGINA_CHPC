@@ -1,97 +1,64 @@
 <template>
-  <!-- Header -->
-  <header class="header">
-    <div class="logo">
-      <img src="ruta-del-logo.png" alt="Logo de la Tienda" />
+  <div>
+    <!-- Header con logo, barra de búsqueda y enlaces de sesión -->
+    <header class="header">
+      <div class="logo">
+        <img src="ruta-del-logo.png" alt="Logo de la Tienda" />
+      </div>
+      <div class="search-bar">
+        <input
+          type="text"
+          v-model="searchQuery"
+          placeholder="Buscar productos..."
+          :disabled="!isAuthenticated"
+        />
+        <button @click="buscarProductos" :disabled="!isAuthenticated">Buscar</button>
+      </div>
+      <div class="user-actions">
+        <template v-if="!isAuthenticated">
+          <router-link to="/login">Iniciar Sesión</router-link>
+          <router-link to="/registro">Registrarse</router-link>
+        </template>
+        <template v-else>
+          <button @click="cerrarSesion">Cerrar Sesión</button>
+        </template>
+      </div>
+    </header>
+
+    <!-- Carrusel de Banners -->
+    <div v-if="banners.length > 0" class="carousel">
+      <div
+        v-for="(banner, index) in banners"
+        :key="banner.id"
+        :class="['carousel-item', { active: index === activeBanner }]"
+      >
+        <!-- Ajustar la URL para incluir el dominio y puerto del backend -->
+        <img :src="getFullImageUrl(banner.imagen_url)" :alt="banner.titulo" class="banner-image" />
+        
+      </div>
+      <button class="prev" @click="cambiarBanner(-1)">❮</button>
+      <button class="next" @click="cambiarBanner(1)">❯</button>
     </div>
 
-    <div class="search-bar">
-      <input
-        type="text"
-        v-model="searchQuery"
-        placeholder="Buscar productos..."
-        :disabled="!isAuthenticated"
-      />
-      <button @click="buscarProductos" :disabled="!isAuthenticated">Buscar</button>
-    </div>
-
-    <div class="user-actions">
-      <template v-if="!isAuthenticated">
-        <router-link to="/login">Iniciar Sesión</router-link>
-        <router-link to="/registro">Registrarse</router-link>
-      </template>
-      <template v-else>
-        <button @click="cerrarSesion">Cerrar Sesión</button>
-      </template>
-    </div>
-  </header>
-
-  <!-- Contenido principal -->
-  <div class="home-container">
-    <!-- Banners -->
-    <div class="banner-slider">
-      <!-- Indicador de carga -->
-      <template v-if="loadingBanners">
-        <p>Cargando banners...</p>
-      </template>
-      <!-- Mostrar banners si se cargan correctamente -->
-      <template v-else-if="banners.length">
-        <div
-          v-for="(banner, index) in banners"
-          :key="index"
-          class="banner-slide"
-        >
-          <img
-            :src="banner.imagen_url"
-            :alt="banner.titulo"
-            @error="handleImageError($event, banner)"
-          />
-        </div>
-      </template>
-      <!-- Mensaje si no hay banners disponibles -->
-      <template v-else>
-        <p>No hay banners disponibles en este momento.</p>
-      </template>
-    </div>
-
-    <h1>Bienvenidos a Nuestra Tienda</h1>
-    <p>Explora nuestros productos y encuentra lo que necesitas.</p>
-
-    <!-- Productos -->
-    <template v-if="loadingProductos">
-      <p>Cargando productos...</p>
-    </template>
-    <template v-else-if="productos.length">
+    <!-- Contenido principal -->
+    <div class="home-container">
+      <h1>Bienvenidos a Nuestra Tienda</h1>
+      <p>Explora nuestros productos y encuentra lo que necesitas.</p>
       <div class="product-grid">
         <div
           v-for="producto in productos"
           :key="producto.id"
           class="product-card"
         >
-          <img
-            :src="producto.imagen_url"
-            :alt="producto.nombre"
-            @error="handleImageError($event, producto)"
-          />
-          <h3>{{ producto.nombre }}</h3>
+          <img :src="producto.imagen_url || 'ruta-imagen-default.png'" alt="Imagen del Producto" />
+          <h3>{{ producto.nombre_producto }}</h3>
           <p>{{ producto.descripcion }}</p>
-          <!-- Mostrar precio solo si está autenticado -->
-          <p v-if="isAuthenticated">
-            <strong>Precio:</strong> ${{ producto.precio }}
-          </p>
-          <!-- Botón de acciones según autenticación -->
-          <button v-if="isAuthenticated" @click="verDetalle(producto.id)">
-            Ver Detalles
-          </button>
-          <button v-else @click="redirigirLogin">
-            Inicia Sesión para Ver Precios
-          </button>
+          <p v-if="isAuthenticated"><strong>Precio:</strong> ${{ producto.precio }}</p>
+          <button v-if="isAuthenticated" @click="verDetalle(producto.id)">Ver Detalles</button>
+          <button v-else @click="redirigirLogin">Inicia Sesión para Ver Precios</button>
         </div>
       </div>
-    </template>
-    <template v-else>
-      <p>No hay productos disponibles en este momento.</p>
-    </template>
+    </div>
   </div>
 </template>
 
@@ -103,64 +70,41 @@ export default {
   name: 'HomePage',
   data() {
     return {
-      productos: [], // Lista de productos
-      banners: [], // Lista de banners
-      searchQuery: '', // Texto del cuadro de búsqueda
+      banners: [], // Lista de banners obtenidos del backend
+      activeBanner: 0, // Índice del banner actualmente visible
+      productos: [], // Lista de productos obtenidos del backend
+      searchQuery: '', // Término de búsqueda
       isAuthenticated: false, // Estado de autenticación
-      loadingProductos: false, // Indicador de carga para productos
-      loadingBanners: false, // Indicador de carga para banners
-      errorProductos: null, // Error al cargar productos
-      errorBanners: null, // Error al cargar banners
     };
   },
   async created() {
-    // Comprobar si el usuario está autenticado
+    // Comprobación de autenticación
     this.isAuthenticated = !!localStorage.getItem('access_token');
 
-    // Cargar datos iniciales
-    await this.cargarProductos();
-    await this.cargarBanners();
+    // Cargar banners desde la API
+    try {
+      const bannersResponse = await axios.get('http://localhost:5000/tienda/banners');
+      this.banners = bannersResponse.data.data;
+    } catch (error) {
+      console.error('Error al cargar los banners:', error);
+    }
+
+    // Cargar productos desde la API
+    try {
+      const productosResponse = await axios.get('http://localhost:5000/tienda/productos');
+      this.productos = productosResponse.data;
+    } catch (error) {
+      console.error('Error al cargar los productos:', error);
+      alert('Hubo un problema al cargar los productos. Intenta de nuevo más tarde.');
+    }
   },
   methods: {
-    async cargarProductos() {
-      this.loadingProductos = true;
-      this.errorProductos = null;
-      try {
-        const response = await axios.get('http://localhost:5000/tienda/productos');
-        if (response.data && response.data.data) {
-          this.productos = response.data.data;
-        } else {
-          this.errorProductos = 'Formato inesperado en la respuesta de productos.';
-          console.error('Formato inesperado en la respuesta de productos:', response.data);
-        }
-      } catch (error) {
-        this.errorProductos = 'Error al cargar los productos. Inténtalo más tarde.';
-        console.error('Error al cargar los productos:', error.message);
-      } finally {
-        this.loadingProductos = false;
-      }
+    // Construir la URL completa para las imágenes
+    getFullImageUrl(relativeUrl) {
+      return `http://localhost:5000${relativeUrl}`;
     },
-    async cargarBanners() {
-      this.loadingBanners = true;
-      this.errorBanners = null;
-      try {
-        const response = await axios.get('http://localhost:5000/tienda/banners');
-        if (response.data && response.data.data) {
-          this.banners = response.data.data;
-        } else {
-          this.errorBanners = 'Formato inesperado en la respuesta de banners.';
-          console.error('Formato inesperado en la respuesta de banners:', response.data);
-        }
-      } catch (error) {
-        this.errorBanners = 'Error al cargar los banners. Inténtalo más tarde.';
-        console.error('Error al cargar los banners:', error.message);
-      } finally {
-        this.loadingBanners = false;
-      }
-    },
-    handleImageError(event, item) {
-      console.error(`Error cargando imagen: ${item.imagen_url}`);
-      event.target.src = "/static/default-placeholder.png"; // Imagen predeterminada
+    cambiarBanner(direccion) {  
+      this.activeBanner = (this.activeBanner + direccion + this.banners.length) % this.banners.length;
     },
     verDetalle(id) {
       if (id) {
@@ -170,14 +114,10 @@ export default {
       }
     },
     buscarProductos() {
-      if (this.isAuthenticated && this.searchQuery) {
-        console.log('Buscando productos con:', this.searchQuery);
-        // Lógica de búsqueda adicional
-      } else if (!this.searchQuery) {
-        console.warn('Introduce un término de búsqueda.');
-      } else {
-        console.warn('Usuario no autenticado. Redirigiendo a login.');
-        this.redirigirLogin();
+      if (this.isAuthenticated && this.searchQuery.trim() !== '') {
+        this.productos = this.productos.filter(producto =>
+          producto.nombre_producto.toLowerCase().includes(this.searchQuery.toLowerCase())
+        );
       }
     },
     cerrarSesion() {
@@ -191,8 +131,6 @@ export default {
   },
 };
 </script>
-
-
 
 <style scoped>
 /* Estilos del header */
@@ -248,31 +186,75 @@ export default {
   text-decoration: underline;
 }
 
-/* Estilos del slider de banners */
-.banner-slider {
-  display: flex;
-  overflow-x: auto;
-  gap: 20px;
-  margin-bottom: 20px;
-  padding: 10px 0;
-  scroll-snap-type: x mandatory;
-}
-
-.banner-slide {
-  flex: 0 0 auto;
+/* Estilos del carrusel */
+.carousel {
+  position: relative;
   width: 100%;
-  max-width: 300px;
-  border: 1px solid #ddd;
+  max-width: 1200px;
+  margin: 20px auto;
+  overflow: hidden;
   border-radius: 8px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  scroll-snap-align: center;
+  height: 400px; /* Ajusta según el tamaño del banner */
 }
 
-.banner-slide img {
+.carousel-item {
+  display: none;
+  position: absolute;
   width: 100%;
-  height: 200px;
-  object-fit: cover;
+  height: 100%;
+  transition: opacity 0.5s ease-in-out;
+}
+
+.carousel-item.active {
+  display: block;
+  opacity: 1;
+}
+
+.banner-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover; /* Ajusta la imagen al contenedor */
+}
+
+.carousel-caption {
+  position: absolute;
+  bottom: 10%;
+  left: 50%;
+  transform: translateX(-50%);
+  color: white;
+  background-color: rgba(0, 0, 0, 0.7);
+  padding: 15px 20px;
   border-radius: 8px;
+  font-size: 1.5rem;
+  text-align: center;
+}
+
+.carousel .prev,
+.carousel .next {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 30px;
+  color: white;
+  background-color: rgba(0, 0, 0, 0.6);
+  border: none;
+  padding: 10px;
+  cursor: pointer;
+  border-radius: 50%;
+}
+
+.carousel .prev:hover,
+.carousel .next:hover {
+  background-color: rgba(0, 0, 0, 0.8);
+}
+
+.carousel .prev {
+  left: 10px;
+}
+
+.carousel .next {
+  right: 10px;
 }
 
 /* Estilos del contenido principal */
@@ -297,8 +279,6 @@ export default {
 
 .product-card img {
   max-width: 100%;
-  height: 200px;
-  object-fit: cover;
   border-radius: 8px;
 }
 
@@ -323,13 +303,5 @@ export default {
 
 .product-card button:hover {
   background-color: #ff8c00;
-}
-
-/* Indicadores de carga */
-p {
-  font-size: 16px;
-  color: #555;
-  text-align: center;
-  margin-top: 20px;
 }
 </style>
